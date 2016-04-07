@@ -94,7 +94,7 @@ void setup() {
     ntpValid = doNTPupdate(); //Do an NTP update on startup
 
     // we use the index 0 animation to time how often we rotate all the pixels
-    animations.StartAnimation(0, 200, LoopAnimUpdate); 
+    animations.StartAnimation(0, 10, LoopAnimUpdate); 
 }
 
 void initWifi(){
@@ -123,13 +123,9 @@ clockTime offTime = {.hours = 1, .minutes = 30, .seconds = 0}; //1:30 AM
 void loop() {
     //Serial.println("Starting loop()");
     
-    if(lightsOn){
-      animations.UpdateAnimations();
-      Serial.println("Did UpdateAnimations()");
-      strip.Show();
-      Serial.println("showed strip");
-    }
-
+    animations.UpdateAnimations();
+    strip.Show();
+      
     clockTime lastNTP;
     getCurrTime(&lastNTP);
 
@@ -147,27 +143,30 @@ void loop() {
         unsigned long currTimeAsSeconds = ct_to_day_seconds(lastNTP);
     
         //For debugging start/stop condition:
-        Serial.print("onTimeAsSeconds = ");
-        Serial.println(onTimeAsSeconds);
-        Serial.print("offTimeAsSeconds = ");
-        Serial.println(offTimeAsSeconds);
-        Serial.print("currTimeAsSeconds = ");
-        Serial.println(currTimeAsSeconds);
+        //Serial.print("onTimeAsSeconds = ");
+        //Serial.println(onTimeAsSeconds);
+        //Serial.print("offTimeAsSeconds = ");
+        //Serial.println(offTimeAsSeconds);
+        //Serial.print("currTimeAsSeconds = ");
+        //Serial.println(currTimeAsSeconds);
       
         if ((currTimeAsSeconds <= offTimeAsSeconds) || (currTimeAsSeconds >= onTimeAsSeconds)) {
-            Serial.println("LIGHTS ON");
+            
             if(lightsOn == false){  //If transitioning from OFF state...
+              Serial.println("Switching lights ON"); //only report if state change
               DrawInitialRainbow(); //...redraw the initial rainbow colors
+              strip.Show();
               Serial.println("Did initial rainbow draw.");
             }
             lightsOn = true;
-            //animation update continues in superloop
         } else {
-            Serial.println("LIGHTS OFF");
+            if(lightsOn == true){
+              Serial.println("Switching lights OFF"); //only report if state change
+            }
             lightsOn = false;
             strip.ClearTo(black);
             strip.Show();
-            //animation update will NOT continue in superloop
+            animations.StopAnimation(0);
         }
     }
 
@@ -220,20 +219,20 @@ void DrawInitialRainbow()
 
 void LoopAnimUpdate(const AnimationParam& param)
 {
-    Serial.println("Doing LoopAnimUpdate()");
+    //Serial.println("Doing LoopAnimUpdate()");
     // wait for this animation to complete,
     // we are using it as a timer of sorts
     if (param.state == AnimationState_Completed)
     {
-        Serial.print("anim complete, ");
+        //Serial.print("anim complete, ");
         // done, time to restart this position tracking animation/timer
         animations.RestartAnimation(param.index);
-        Serial.print("restarted, ");
+        //Serial.print("restarted, ");
 
         // rotate the complete strip one pixel to the right on every update
-        strip.RotateRight(1);
-        Serial.println("rotated");
-        //strip.RotateLeft(1);
+        //strip.RotateRight(1);
+        strip.RotateLeft(1);
+        //Serial.println("rotated");
     }
 }
 
