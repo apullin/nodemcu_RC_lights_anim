@@ -94,7 +94,7 @@ void setup() {
     ntpValid = doNTPupdate(); //Do an NTP update on startup
 
     // we use the index 0 animation to time how often we rotate all the pixels
-    animations.StartAnimation(0, 66, LoopAnimUpdate); 
+    animations.StartAnimation(0, 200, LoopAnimUpdate); 
 }
 
 void initWifi(){
@@ -133,8 +133,8 @@ void loop() {
     clockTime lastNTP;
     getCurrTime(&lastNTP);
 
-    int32_t millis_since_update = millis() - lastNTP.updateTimeMillis;
-    if( millis_since_update > 30000 ){
+    uint32_t millis_since_update = millis() - lastNTP.updateTimeMillis;
+    if( millis_since_update >= 30000u ){
       Serial.println("Doing NTP update ...");
       ntpValid = doNTPupdate();
     }
@@ -147,19 +147,19 @@ void loop() {
         unsigned long currTimeAsSeconds = ct_to_day_seconds(lastNTP);
     
         //For debugging start/stop condition:
-        //Serial.print("onTimeAsSeconds = ");
-        //Serial.println(onTimeAsSeconds);
-        //Serial.print("offTimeAsSeconds = ");
-        //Serial.println(offTimeAsSeconds);
-        //Serial.print("currTimeAsSeconds = ");
-        //Serial.println(currTimeAsSeconds);
+        Serial.print("onTimeAsSeconds = ");
+        Serial.println(onTimeAsSeconds);
+        Serial.print("offTimeAsSeconds = ");
+        Serial.println(offTimeAsSeconds);
+        Serial.print("currTimeAsSeconds = ");
+        Serial.println(currTimeAsSeconds);
       
         if ((currTimeAsSeconds <= offTimeAsSeconds) || (currTimeAsSeconds >= onTimeAsSeconds)) {
             Serial.println("LIGHTS ON");
             if(lightsOn == false){  //If transitioning from OFF state...
               DrawInitialRainbow(); //...redraw the initial rainbow colors
+              Serial.println("Did initial rainbow draw.");
             }
-            Serial.println("Did initial rainbow draw.");
             lightsOn = true;
             //animation update continues in superloop
         } else {
@@ -179,6 +179,7 @@ void loop() {
     // if on --> rainbowcycle
     // if off --> wait 30 seconds
     //Serial.println("finishing loop()");
+    
 }
 
 
@@ -219,16 +220,19 @@ void DrawInitialRainbow()
 
 void LoopAnimUpdate(const AnimationParam& param)
 {
+    Serial.println("Doing LoopAnimUpdate()");
     // wait for this animation to complete,
     // we are using it as a timer of sorts
     if (param.state == AnimationState_Completed)
     {
-        Serial.println("anim complete, restarting");
+        Serial.print("anim complete, ");
         // done, time to restart this position tracking animation/timer
         animations.RestartAnimation(param.index);
+        Serial.print("restarted, ");
 
         // rotate the complete strip one pixel to the right on every update
         strip.RotateRight(1);
+        Serial.println("rotated");
         //strip.RotateLeft(1);
     }
 }
